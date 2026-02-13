@@ -1,12 +1,14 @@
 import dlt
 from dlt.sources.rest_api import RESTAPIConfig, rest_api_source
 from dlt.sources.helpers.rest_client.paginators import PageNumberPaginator
+from airflow.models import Variable
+
 
 config: RESTAPIConfig = {
     "client": {
         "base_url": "https://api.github.com",
         "auth": {
-            "token": dlt.secrets["sources.access_token"], #<--- we already configured access_token above
+            "token": Variable.get("github_access_token"),  ##dlt.secrets["sources.access_token"], #<--- we already configured access_token above
         },
         "paginator": "header_link" # <---- set up paginator type
     },
@@ -70,13 +72,15 @@ github_source.forks.apply_hints(
     )
 )
 
-pipeline = dlt.pipeline(
-    pipeline_name="rest_api_github",
-    destination="snowflake",
-    dataset_name="github_data",
-    progress="log"
-    #dev_mode=True,
-)
+if __name__ == "__main__":
 
-load_info = pipeline.run(github_source)
-print(load_info)
+    pipeline = dlt.pipeline(
+        pipeline_name="rest_api_github",
+        destination="snowflake",
+        dataset_name="github_data",
+        progress="log"
+        #dev_mode=True,
+    )
+
+    load_info = pipeline.run(github_source)
+    print(load_info)
